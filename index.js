@@ -137,75 +137,45 @@ const server = http.createServer(async (req, res) => {
         res.end();
       }
       break;
-    case "/message":
-      // Verificando si es post
-      if (method === "POST") {
-        // Se crea una variable para almacenar los
-		    // Datos entrantes del cliente
-        let body = "";
-        // Se registra un manejador de eventos
-        // Para la recepción de datos
-        req.on("data", (data => {
-          body += data;
-          if (body.length > 1e6) return req.socket.destroy();
-        }));
-        // Se registra una manejador de eventos
-		    // para el termino de recepción de datos
-        req.on("end", () => {
-          // Procesa el formulario
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "text/html");
-          // Mediante URLSearchParams se extraen
-			    // los campos del formulario
-          const params = new URLSearchParams(body);
-          // Se construye un objeto a partir de los datos
-			    // en la variable params
-          const parsedParams = Object.fromEntries(params);
-          res.write(`
-          <html>
-            <head>
-              <link rel="icon" type="image/x-icon" sizes="32x32" href="/favicon.ico">
-              <title>My App</title>
-              <style>
-                body {
-                  background-color: #f9f9f9;
-                  font-family: Arial, sans-serif;
-                }
-                h1 {
-                  color: #e74c3c;
-                  font-size: 48px;
-                  margin-top: 50px;
-                  text-align: center;
-                }
-                p {
-                  font-size: 24px;
-                  color: #7f8c8d;
-                  text-align: center;
-                  margin-top: 20px;
-                }
-                .error-message {
-                  font-size: 18px;
-                  color: #95a5a6;
-                  text-align: center;
-                  margin-top: 20px;
-                }
-              </style>
-            </head>
-            <body> 
-              <h1 style="color: #333">SERVER MESSAGE RECIEVED &#128172</h1>
-              <p>${parsedParams.message}</p>
-            </body>
-          </html>
-          `);
+      case "/message":
+        // Verificando si es post
+        if (method === "POST") {
+          // Se crea una variable para almacenar los
+          // Datos entrantes del cliente
+          let body = "";
+          // Se registra un manejador de eventos
+          // Para la recepción de datos
+          req.on("data", (data => {
+            body += data;
+            if (body.length > 1e6) return req.socket.destroy();
+          }));
+          // Se registra una manejador de eventos
+          // para el termino de recepción de datos
+          req.on("end", async () => {
+            // Procesa el formulario
+            // Mediante URLSearchParams se extraen
+            // los campos del formulario
+            const params = new URLSearchParams(body);
+            // Se construye un objeto a partir de los datos
+            // en la variable params
+            const parsedParams = Object.fromEntries(params);
+            // Almacenaremos en un archivo el mensaje
+            await fs.writeFile('message.txt', parsedParams.message);
+            console.log("📣 Archivo message.txt grabado");
+          })
+          // En lugar de regrear una pagina HTML
+          // Realizaremos un redireccionamiento
+          res.statusCode = 302;
+          // Esto establece un redireccionamiento
+          res.setHeader('Location', '/');
           // Se finaliza la conexion
           return res.end();
-        })
-      } else {
-        res.statusCode = 404;
-        res.write("404: Endpoint no encontrado")
-        res.end();
-      }
-      break;
+        } else {
+          res.statusCode = 404;
+          res.write("📣 404: Endpoint no encontrado")
+          res.end();
+        }
+        break;
       // Continua con el defautl
     default:
       // Peticion raiz
